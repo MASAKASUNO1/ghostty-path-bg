@@ -9,6 +9,7 @@ import {
   UnknownColorError,
 } from "../src/colors.js";
 import { setBackground, resetBackground } from "../src/terminal.js";
+import { saveColor, clearColor, gbgConfPath } from "../src/config.js";
 
 function readVersion() {
   const pkgPath = fileURLToPath(new URL("../package.json", import.meta.url));
@@ -21,7 +22,8 @@ Usage:
   gbg                     Apply a random color from the built-in palette
   gbg --color <name|hex>  Apply a specific color (name or #hex)
   gbg <name|hex>          Shorthand for --color
-  gbg --reset             Reset the background to the terminal default
+  gbg --no-save           Apply to the current session only (don't persist)
+  gbg --reset             Reset the background and clear the persisted color
   gbg --list              List available color names
   gbg --help              Show this help
   gbg --version           Show version
@@ -31,6 +33,7 @@ Examples:
   gbg --color dracula
   gbg -c "#1a2b3c"
   gbg teal
+  gbg --no-save tomato
   gbg --reset
 
 Colors:
@@ -38,7 +41,9 @@ Colors:
   - CSS color names (red, teal, midnightblue, ...)
   - Hex: #rgb or #rrggbb (with or without the leading #)
 
-The change lasts for the current terminal session.`;
+By default the color is applied to the current session (via OSC 11) and saved to
+Ghostty's config so it survives new windows and restarts. Use --no-save for a
+one-off change, or --reset to clear it.`;
 
 function printList() {
   const { themes, css } = colorNames();
@@ -55,6 +60,7 @@ function main() {
     parsed = parseArgs({
       options: {
         color: { type: "string", short: "c" },
+        "no-save": { type: "boolean", short: "n" },
         reset: { type: "boolean", short: "r" },
         list: { type: "boolean", short: "l" },
         help: { type: "boolean", short: "h" },
@@ -84,7 +90,8 @@ function main() {
   }
   if (values.reset) {
     resetBackground();
-    console.error("gbg: background reset to terminal default");
+    clearColor();
+    console.error("gbg: background reset (cleared from this session and Ghostty config)");
     return;
   }
 
@@ -107,6 +114,11 @@ function main() {
   if (result.name) label += ` (${result.name})`;
   else if (!input) label += " (random)";
   console.error(`gbg: background → ${label}`);
+
+  if (!values["no-save"]) {
+    saveColor(result.hex);
+    console.error(`gbg: saved to ${gbgConfPath()} (new windows & restarts; reload Ghostty config to refresh open windows)`);
+  }
 }
 
 main();
