@@ -9,41 +9,61 @@ import {
   UnknownColorError,
 } from "../src/colors.js";
 import { setBackground, resetBackground } from "../src/terminal.js";
-import { saveColor, clearColor, gbgConfPath } from "../src/config.js";
+import { setPathColor, clearPathColor, pathsFile } from "../src/paths.js";
 
 function readVersion() {
   const pkgPath = fileURLToPath(new URL("../package.json", import.meta.url));
   return JSON.parse(readFileSync(pkgPath, "utf8")).version;
 }
 
-const HELP = `gbg — change your terminal background color (Ghostty & any OSC 11 terminal)
+const HELP = `gbg — per-directory background colors for Ghostty (& any OSC 11 terminal)
 
 Usage:
-  gbg                     Apply a random color from the built-in palette
-  gbg --color <name|hex>  Apply a specific color (name or #hex)
+  gbg                     Apply a random color and remember it for this directory
+  gbg --color <name|hex>  Apply a specific color (name or #hex) and remember it
   gbg <name|hex>          Shorthand for --color
-  gbg --no-save           Apply to the current session only (don't persist)
-  gbg --reset             Reset the background and clear the persisted color
+  gbg --no-save           Apply to the current window only (don't remember)
+  gbg --reset             Forget this directory's color and reset the background
   gbg --list              List available color names
+  gbg shell-init          Print the zsh hook that switches color on cd
   gbg --help              Show this help
   gbg --version           Show version
 
 Examples:
-  gbg
-  gbg --color dracula
-  gbg -c "#1a2b3c"
+  gbg --color dracula     # this directory is dracula from now on
   gbg teal
-  gbg --no-save tomato
+  gbg --no-save tomato    # one-off, not remembered
   gbg --reset
+
+Per-directory colors:
+  By default gbg remembers the color for the current directory. Add the cd hook
+  to your shell so it switches automatically:
+
+      echo 'eval "$(gbg shell-init)"' >> ~/.zshrc
+
+  Then cd into a remembered directory and its color is applied; cd elsewhere and
+  the background returns to your theme default.
 
 Colors:
   - Named themes (dracula, nord, gruvbox, tokyonight, ...)
   - CSS color names (red, teal, midnightblue, ...)
-  - Hex: #rgb or #rrggbb (with or without the leading #)
+  - Hex: #rgb or #rrggbb (with or without the leading #)`;
 
-By default the color is applied to the current session (via OSC 11) and saved to
-Ghostty's config so it survives new windows and restarts. Use --no-save for a
-one-off change, or --reset to clear it.`;
+const SHELL_INIT = `# gbg: per-directory background colors
+_gbg_paths="\${XDG_CONFIG_HOME:-$HOME/.config}/gbg/paths"
+_gbg_apply() {
+  [[ -t 1 ]] || return
+  local hex=""
+  [[ -r "$_gbg_paths" ]] && hex=$(command awk -F'\\t' -v p="$PWD" '$1==p{print $2; exit}' "$_gbg_paths")
+  if [[ -n "$hex" ]]; then
+    printf '\\033]11;%s\\007' "$hex"
+  else
+    printf '\\033]111\\007'
+  fi
+}
+autoload -Uz add-zsh-hook
+add-zsh-hook chpwd _gbg_apply
+_gbg_apply`;
 
 function printList() {
   const { themes, css } = colorNames();
@@ -76,6 +96,10 @@ function main() {
 
   const { values, positionals } = parsed;
 
+  if (positionals[0] === "shell-init") {
+    console.log(SHELL_INIT);
+    return;
+  }
   if (values.help) {
     console.log(HELP);
     return;
@@ -88,10 +112,22 @@ function main() {
     printList();
     return;
   }
+
+  // Match the shell's logical $PWD (which the cd hook uses) rather than the
+  // symlink-resolved physical path, so keys line up across symlinked dirs.
+  const cwd =
+    process.env.PWD && process.env.PWD.startsWith("/")
+      ? process.env.PWD
+      : process.cwd();
+
   if (values.reset) {
     resetBackground();
-    clearColor();
-    console.error("gbg: background reset (cleared from this session and Ghostty config)");
+    const had = clearPathColor(cwd);
+    console.error(
+      had
+        ? `gbg: forgot color for ${cwd} and reset the background`
+        : "gbg: background reset to theme default",
+    );
     return;
   }
 
@@ -116,8 +152,8 @@ function main() {
   console.error(`gbg: background → ${label}`);
 
   if (!values["no-save"]) {
-    saveColor(result.hex);
-    console.error(`gbg: saved to ${gbgConfPath()} (new windows & restarts; reload Ghostty config to refresh open windows)`);
+    setPathColor(cwd, result.hex);
+    console.error(`gbg: remembered for ${cwd} (applies when you cd here)`);
   }
 }
 
