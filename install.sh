@@ -17,7 +17,7 @@ if ! grep -Fq 'ghostty-path-bg.zsh' "$zshrc"; then
   {
     printf '\n'
     printf '# Ghostty path-based background color\n'
-    printf '[ -r "$HOME/.config/zsh/ghostty-path-bg.zsh" ] && source "$HOME/.config/zsh/ghostty-path-bg.zsh"\n'
+    printf '[ -r "%s" ] && source "%s"\n' "$target_file" "$target_file"
   } >> "$zshrc"
 fi
 
