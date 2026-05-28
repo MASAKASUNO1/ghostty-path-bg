@@ -1,5 +1,9 @@
 # ghostty-path-bg
 
+
+https://github.com/user-attachments/assets/28d9a5a6-a82c-4da5-b39d-c8d9bf58036f
+
+
 Project-aware background colors for Ghostty.
 
 This is a tiny zsh integration that changes Ghostty's background color when you
