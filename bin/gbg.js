@@ -121,6 +121,9 @@ function main() {
       : process.cwd();
 
   if (values.reset) {
+    if (values.color || positionals[0]) {
+      console.error("gbg: --reset ignores any color argument");
+    }
     resetBackground();
     const had = clearPathColor(cwd);
     console.error(
@@ -152,8 +155,11 @@ function main() {
   console.error(`gbg: background → ${label}`);
 
   if (!values["no-save"]) {
-    setPathColor(cwd, result.hex);
-    console.error(`gbg: remembered for ${cwd} (applies when you cd here)`);
+    if (setPathColor(cwd, result.hex)) {
+      console.error(`gbg: remembered for ${cwd} (applies when you cd here)`);
+    } else {
+      console.error("gbg: applied but not remembered (path contains a tab or newline)");
+    }
   }
 }
 

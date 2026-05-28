@@ -34,9 +34,13 @@ function write(map) {
 }
 
 export function setPathColor(dir, hex) {
+  // TAB and newline are the file's field/record separators; a path containing
+  // either would corrupt unrelated entries, so refuse to store it.
+  if (dir.includes("\t") || dir.includes("\n")) return false;
   const map = read();
   map.set(dir, hex);
   write(map);
+  return true;
 }
 
 export function clearPathColor(dir) {
