@@ -1,56 +1,60 @@
-# ghostty-path-bg
+# ghostty-bg (`gbg`)
 
+Change your terminal background color with one command.
 
 https://github.com/user-attachments/assets/28d9a5a6-a82c-4da5-b39d-c8d9bf58036f
 
-
-Project-aware background colors for Ghostty.
-
-This is a tiny zsh integration that changes Ghostty's background color when you
-`cd` between projects. It hashes the project directory name and picks from a
-curated dark color table, so each project gets a stable, readable background.
+`gbg` is a tiny, zero-dependency Node CLI. It sends the standard
+[OSC 11](https://invisible-island.net/xterm/ctlseqs/ctlseqs.html) escape
+sequence, so it works in Ghostty and most modern terminals — no Ghostty fork
+or special API required. The change lasts for the current terminal session.
 
 ## Install
 
 ```sh
-git clone https://github.com/masao/ghostty-path-bg.git
-cd ghostty-path-bg
-./install.sh
-source ~/.zshrc
+npm install -g ghostty-bg
 ```
+
+Or run it without installing:
+
+```sh
+npx ghostty-bg --color dracula
+```
+
+## Usage
+
+```sh
+gbg                     # random color from the built-in palette
+gbg --color dracula     # a named theme
+gbg --color "#1a2b3c"   # a hex value (#rgb or #rrggbb)
+gbg teal                # shorthand for --color
+gbg --reset             # back to the terminal default
+gbg --list              # list available color names
+gbg --help              # show help
+gbg --version           # show version
+```
+
+Short flags: `-c` (color), `-r` (reset), `-l` (list), `-h` (help),
+`-v` (version).
+
+## Colors
+
+`--color` accepts three kinds of values:
+
+- **Named themes** — `dracula`, `nord`, `gruvbox`, `tokyonight`,
+  `catppuccin`, `solarized`, `github-dark`, and ~40 more. Run `gbg --list`.
+- **CSS color names** — `red`, `teal`, `midnightblue`, `rebeccapurple`, ...
+- **Hex** — `#rgb` or `#rrggbb`, with or without the leading `#`.
+
+Running `gbg` with no arguments picks a random color from a curated palette of
+dark, readable backgrounds.
 
 ## How It Works
 
-- If the directory is under `~/playground/<project>`, `<project>` is used as the
-  color key.
-- Otherwise, if the directory is inside a Git repository, the repository root
-  directory name is used.
-- Otherwise, the current directory name is used.
-- The key is hashed with `cksum`, then mapped into a dark color palette.
-- The color is sent to Ghostty with OSC 11.
-
-## Manual Install
-
-```sh
-mkdir -p ~/.config/zsh
-cp ghostty-path-bg.zsh ~/.config/zsh/ghostty-path-bg.zsh
-printf '\n%s\n' '# Ghostty path-based background color' >> ~/.zshrc
-printf '%s\n' '[ -r "$HOME/.config/zsh/ghostty-path-bg.zsh" ] && source "$HOME/.config/zsh/ghostty-path-bg.zsh"' >> ~/.zshrc
-source ~/.zshrc
-```
-
-## Customize
-
-Edit `~/.config/zsh/ghostty-path-bg.zsh`.
-
-- Change `_ghostty_path_bg_key` to use a different project-detection rule.
-- Change the `colors=(...)` table to adjust the palette.
-- Run `ghostty_bg_reset` to ask Ghostty to reset the background color.
+`gbg` writes `ESC ] 11 ; <color> BEL` to the terminal to set the background,
+and `ESC ] 111 BEL` to reset it. That's the entire mechanism.
 
 ## Requirements
 
-- Ghostty
-- zsh
-- `cksum`, `awk`, and `git` on `PATH`
-
-The script is no-op outside Ghostty because it checks `TERM_PROGRAM=ghostty`.
+- Node.js >= 18
+- A terminal that supports OSC 11 (Ghostty, iTerm2, most modern terminals)

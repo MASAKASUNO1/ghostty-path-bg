@@ -1,0 +1,26 @@
+{
+  "name": "ghostty-bg",
+  "version": "0.1.0",
+  "description": "Change your Ghostty (or any OSC 11 terminal) background color with a single command.",
+  "type": "module",
+  "bin": {
+    "gbg": "bin/gbg.js"
+  },
+  "files": [
+    "bin",
+    "src"
+  ],
+  "engines": {
+    "node": ">=18"
+  },
+  "keywords": [
+    "ghostty",
+    "terminal",
+    "background",
+    "color",
+    "osc",
+    "cli",
+    "gbg"
+  ],
+  "license": "MIT"
+}
