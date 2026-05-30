@@ -1,6 +1,6 @@
 {
   "name": "ghostty-bg",
-  "version": "0.2.1",
+  "version": "0.3.0",
   "description": "Change your Ghostty (or any OSC 11 terminal) background color with a single command.",
   "author": "Masa",
   "homepage": "https://github.com/MASAKASUNO1/ghostty-path-bg#readme",
@@ -13,7 +13,8 @@
   },
   "type": "module",
   "bin": {
-    "gbg": "bin/gbg.js"
+    "gbg": "bin/gbg.js",
+    "gbgt": "bin/gbgt.js"
   },
   "files": [
     "bin",

@@ -36,6 +36,7 @@ gbg --color dracula     # 名前付きテーマ
 gbg --color "#1a2b3c"   # HEX 値 (#rgb または #rrggbb)
 gbg teal                # --color の短縮形
 gbg --no-save tomato    # 現在のウィンドウのみ（記憶しない）
+gbgt dracula            # ↑の短縮。一時的に変えるだけ（記憶しない）
 gbg --reset             # このディレクトリの色を忘れて背景をリセット
 gbg --list              # 利用可能な色名の一覧
 gbg shell-init          # zsh の cd フックを出力
@@ -45,6 +46,21 @@ gbg --version           # バージョン
 
 短縮フラグ: `-c` (color), `-n` (no-save), `-r` (reset), `-l` (list),
 `-h` (help), `-v` (version)。
+
+### `gbgt` — 一時的に変えるだけ
+
+`gbgt` は `gbg --no-save` と同じです（`t` は temporary）。背景色を**今の
+ウィンドウにだけ**適用し、ディレクトリには**記憶しません**。引数は `gbg` と
+同じものをそのまま渡せます。
+
+```sh
+gbgt              # ランダムな暗色を一時適用（記憶しない）
+gbgt dracula      # 名前付きテーマを一時適用
+gbgt "#1a2b3c"    # HEX を一時適用
+```
+
+`cd` フックを入れている場合、別のディレクトリへ移動して戻ってくると、記憶済みの
+色（または既定色）に戻ります。`gbgt` で当てた色はあくまで一時的なものです。
 
 ## 色の指定
 
